@@ -1,0 +1,6 @@
+[package]
+name = "ctl-model-checker"
+version = "0.1.0"
+authors = ["Eyebrowmoon <khpark0312@postech.ac.kr>"]
+
+[dependencies]
