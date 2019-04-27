@@ -1,12 +1,19 @@
-pub enum Formula {
-	Atomic(i32),
-	And(Box<Formula>, Box<Formula>),
-	Not(Box<Formula>, Box<Formula>),
-	E(Box<TemporalFormula>),
-	A(Box<TemporalFormula>)
+use std::rc::Rc;
+
+pub type Proposition = i32;
+
+pub type Formula = Rc<FormulaEnum>;
+pub type TemporalFormula = Rc<TemporalFormulaEnum>;
+
+pub enum FormulaEnum {
+	Atomic(Proposition),
+	And(Formula, Formula),
+	Not(Formula),
+	E(TemporalFormula),
+	A(TemporalFormula)
 }
 
-pub enum TemporalFormula {
-	X(Box<Formula>),
-	U(Box<Formula>, Box<Formula>)
+pub enum TemporalFormulaEnum {
+	X(Formula),
+	U(Formula, Formula)
 }
