@@ -8,13 +8,12 @@ use ctl::TemporalFormulaEnum::*;
 type Marking = HashSet<State>;
 
 pub struct Checker {
-	model: Model,
-	property: Formula
+	model: Model
 }
 
 impl Checker {
-	pub fn new(model: Model, property: Formula) -> Checker {
-		Checker { model: model, property: property }
+	pub fn new(model: Model) -> Checker {
+		Checker { model: model }
 	}
 	
 	fn marking_atomic(&self, id: &Proposition) -> Marking {
@@ -94,7 +93,7 @@ impl Checker {
 				
 				seen_before.insert(pred.to_owned());
 				
-				if hold_psi1 & pred_seen_before {
+				if hold_psi1 & !pred_seen_before {
 					to_lookup.push(pred.to_owned());
 				}
 			}
@@ -115,9 +114,9 @@ impl Checker {
 			(state.to_owned(), self.model.degree(&state))
 		}).collect();
 		
-		state.iter()
+		states.iter()
 			.filter(|&state| marking_psi2.contains(&state))
-			.for_each(|&state| to_lookup.push(state.to_owned));
+			.for_each(|&state| to_lookup.push(state.to_owned()));
 		
 		while !to_lookup.is_empty() {
 			let state = to_lookup.pop().unwrap();
@@ -129,10 +128,12 @@ impl Checker {
 				let hold_psi1 = marking_psi1.contains(&pred);
 				
 				match count.get_mut(&pred) {
-					Some(count_val) => {
+					Some(count_val) => {	
 						*count_val -= 1;
 						
-						if (count_val.to_owned() == 0) & hold_psi1 {
+						if (count_val.to_owned() == 0) 
+							& hold_psi1 
+							& !marking.contains(&pred) {
 							to_lookup.push(pred.to_owned());
 						}
 					}
@@ -168,9 +169,13 @@ impl Checker {
 		}
 	}
 	
-	pub fn check(&self) -> bool {
-		let marking = self.marking(&self.property);
+	pub fn check(&self, property: &Formula) -> bool {
+		let marking = self.marking(property);
 		
 		marking.contains(self.model.initial_state())
+	}
+	
+	pub fn model(&self) -> &Model {
+		&self.model
 	}
 }
