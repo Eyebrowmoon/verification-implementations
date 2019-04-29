@@ -8,12 +8,16 @@ use ctl::TemporalFormulaEnum::*;
 type Marking = HashSet<State>;
 
 pub struct Checker {
-	model: Model
+	model: Model,
+	states: Marking
 }
 
 impl Checker {
 	pub fn new(model: Model) -> Checker {
-		Checker { model: model }
+		let states = model.states().iter()
+						  .map(|&state| state.to_owned()).collect();
+		
+		Checker { model: model, states: states }
 	}
 	
 	fn marking_atomic(&self, id: &Proposition) -> Marking {
@@ -26,20 +30,19 @@ impl Checker {
 		let marking_psi1 = self.marking(psi1);
 		let marking_psi2 = self.marking(psi2);
 		
-		self.model.states().iter().filter(|&state| {
-			let hold_psi1 = marking_psi1.contains(&state);
-			let hold_psi2 = marking_psi2.contains(&state);
-			
-			hold_psi1 & hold_psi2
-		}).map(|&state| state.to_owned()).collect()
+		marking_psi1
+			.intersection(&marking_psi2)
+			.map(|&state| state.to_owned())
+			.collect()
 	}
 	
 	fn marking_not(&self, psi: &Formula) -> Marking {
 		let marking_psi = self.marking(psi);
-		
-		self.model.states().iter().filter(|&state| {
-			 !marking_psi.contains(&state)
-		}).map(|&state| state.to_owned()).collect()
+	
+		self.states
+			.difference(&marking_psi)
+			.map(|&state| state.to_owned())
+			.collect()
 	}
 	
 	fn marking_ex(&self, psi: &Formula) -> Marking {
